@@ -3,64 +3,85 @@ import pandas as pd
 from pathlib import Path
 import hashlib
 
-
+# ----- Page setup -----
 st.set_page_config(page_title="MMR Rent Compare", layout="wide")
 
 st.title("MMR Rent Compare – 1BHK Median (Hinglish)")
 st.caption("Zones → Areas sorted by 1BHK median rent (ascending). Data demo hai – real entries baad me update karenge.")
 
-# Load data
-def file_hash(path):
+# ----- Cache-busting helpers -----
+def file_hash(path: str) -> str:
+    """Return md5 hash for a file to invalidate cache when CSV changes."""
     return hashlib.md5(Path(path).read_bytes()).hexdigest()
 
 @st.cache_data
-def load_data(path, version):
+def load_data(path: str, version: str) -> pd.DataFrame:
+    # version param is only for cache key; not otherwise used
     return pd.read_csv(path)
 
 csv_path = "mmr_rent_data.csv"
-version = file_hash(csv_path)
+version = file_hash(csv_path)  # agar CSV badlegi to yeh hash change hoga → cache clear
+
 df = load_data(csv_path, version)
 
-# Controls
-zones = df["zone"].unique().tolist()
+# ----- Controls -----
+zones = df["zone"].dropna().unique().tolist()
+zones.sort()
 zone_selected = st.multiselect("Zone choose karo", zones, default=zones)
 
-min_rent, max_rent = int(df["rent_median_1bhk"].min()), int(df["rent_median_1bhk"].max())
+# Safety: numeric conversion (in case CSV strings aa jaaye)
+for col in ["rent_median_1bhk", "rent_min_1bhk", "rent_max_1bhk"]:
+    if df[col].dtype != "int64" and df[col].dtype != "float64":
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+min_rent = int(df["rent_median_1bhk"].min())
+max_rent = int(df["rent_median_1bhk"].max())
 rent_range = st.slider("1BHK Median Rent range (₹/mo)", min_rent, max_rent, (min_rent, max_rent), step=500)
 
 search = st.text_input("Area search (optional)", "")
 
-# Filter
+# Manual refresh button (useful when CSV update karo)
+col_a, col_b = st.columns([1, 3])
+with col_a:
+    if st.button("Reload latest data"):
+        st.cache_data.clear()
+        st.experimental_rerun()
+
+# ----- Filter -----
 mask = df["zone"].isin(zone_selected) & df["rent_median_1bhk"].between(*rent_range)
 if search.strip():
     s = search.strip().lower()
-    mask = mask & df["area"].str.lower().str.contains(s)
+    mask &= df["area"].str.lower().str.contains(s)
 
 filtered = df.loc[mask].copy()
 
-# Sort
+# ----- Sort -----
 sort_zone_first = st.checkbox("Zone-wise view (recommended)", value=True)
 if sort_zone_first:
-    filtered = filtered.sort_values(by=["zone","rent_median_1bhk","area"], ascending=[True, True, True])
+    filtered = filtered.sort_values(by=["zone", "rent_median_1bhk", "area"], ascending=[True, True, True])
 else:
-    filtered = filtered.sort_values(by=["rent_median_1bhk","area"], ascending=[True, True])
+    filtered = filtered.sort_values(by=["rent_median_1bhk", "area"], ascending=[True, True])
 
-# Display
+# ----- Display -----
 st.subheader("Areas (Ascending by 1BHK Median)")
 
-def fmt_money(v): 
-    return f"₹{int(v):,}"
+def fmt_money(v):
+    try:
+        return f"₹{int(v):,}"
+    except Exception:
+        return v
 
-show_cols = ["zone","area","region","rent_median_1bhk","rent_min_1bhk","rent_max_1bhk","deposit_ratio"]
+show_cols = ["zone", "area", "region", "rent_median_1bhk", "rent_min_1bhk", "rent_max_1bhk", "deposit_ratio"]
 rename = {
-    "zone":"Zone",
-    "area":"Area",
-    "region":"Region",
-    "rent_median_1bhk":"Median 1BHK",
-    "rent_min_1bhk":"Low",
-    "rent_max_1bhk":"High",
-    "deposit_ratio":"Deposit"
+    "zone": "Zone",
+    "area": "Area",
+    "region": "Region",
+    "rent_median_1bhk": "Median 1BHK",
+    "rent_min_1bhk": "Low",
+    "rent_max_1bhk": "High",
+    "deposit_ratio": "Deposit",
 }
+
 view = filtered[show_cols].rename(columns=rename)
 view["Median 1BHK"] = view["Median 1BHK"].apply(fmt_money)
 view["Low"] = view["Low"].apply(fmt_money)

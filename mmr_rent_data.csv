@@ -1,0 +1,40 @@
+zone,area,region,rent_median_1bhk,rent_min_1bhk,rent_max_1bhk,deposit_ratio
+Budget Zone,Nalasopara East,Vasai–Virar,7500,6500,8000,2x-3x
+Budget Zone,Nalasopara West,Vasai–Virar,8000,7000,8500,2x-3x
+Budget Zone,Virar East,Vasai–Virar,8500,7500,9000,2x-3x
+Budget Zone,Virar West,Vasai–Virar,9000,8000,10000,2x-3x
+Budget Zone,Naigaon East,Vasai–Virar,9500,8500,10500,2x-3x
+Budget Zone,Naigaon West,Vasai–Virar,10000,9000,11000,2x-3x
+Budget Zone,Vangani,Central Line,7500,6500,8500,2x
+Budget Zone,Badlapur East,Central Line,8500,7000,9500,2x-3x
+Budget Zone,Badlapur West,Central Line,9000,7500,10000,2x-3x
+Budget Zone,Ambernath East,Central Line,9500,8000,10500,2x-3x
+Budget Zone,Ambernath West,Central Line,10000,8500,11000,2x-3x
+Budget Zone,Titwala,Central Line,8500,7500,9500,2x
+Budget Zone,Taloja Phase 1–2,Navi Mumbai,10500,9000,12000,2x-3x
+Budget Zone,Dombivli East (Budget pockets),Central Line,11500,10000,12500,2x-3x
+Budget Zone,Dombivli West (Budget pockets),Central Line,12000,10500,13000,2x-3x
+Budget Zone,Diva,Central Line,9500,8500,10500,2x
+Budget Zone,Mumbra,Central Line,10000,8500,11500,2x-3x
+Budget Zone,Kalwa (Budget pockets),Central Line,12000,10500,13000,2x-3x
+Value for Money Zone,Mira Road (E/W),Mira-Bhayander,16000,13000,19000,3x
+Value for Money Zone,Vasai West,Vasai–Virar,12500,11000,15000,3x
+Mid Range Zone,Thane (Ghodbunder pockets),Thane,23000,20000,27000,3x-4x
+Upper Mid Zone,Powai,Mumbai,42000,35000,55000,4x
+Premium Zone,Bandra West,Mumbai,68000,55000,90000,5x
+Luxury Zone,Cuffe Parade,South Mumbai,110000,90000,150000,6x-8x
+Value for Money Zone,Kalyan East,KDMC,13000,11000,15000,2x-3x
+Value for Money Zone,Kalyan West,KDMC,14000,12000,16000,2x-3x
+Value for Money Zone,Dombivli East (Main),KDMC,14500,12000,17000,2x-3x
+Value for Money Zone,Dombivli West (Main),KDMC,15000,12500,17500,2x-3x
+Value for Money Zone,Mira Road (E/W),Mira-Bhayander,16000,13000,19000,3x
+Value for Money Zone,Bhayander East,Mira-Bhayander,15000,12500,18000,3x
+Value for Money Zone,Bhayander West,Mira-Bhayander,15500,13000,18500,3x
+Value for Money Zone,Vasai West,Vasai–Virar,12500,11000,15000,3x
+Value for Money Zone,Vasai East,Vasai–Virar,12000,10500,14500,3x
+Value for Money Zone,New Panvel (Node),Navi Mumbai,17000,14000,21000,3x
+Value for Money Zone,Kamothe,Navi Mumbai,18000,15000,22000,3x
+Value for Money Zone,Ulwe,Navi Mumbai,18500,15000,23000,3x
+Value for Money Zone,Airoli (Budget pockets),Navi Mumbai,20000,17000,24000,3x-4x
+Value for Money Zone,Kopar Khairane (Budget pockets),Navi Mumbai,20000,17000,24000,3x-4x
+Value for Money Zone,Panvel (Old City),Raigad/MMR,16000,13500,20000,3x

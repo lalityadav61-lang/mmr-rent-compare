@@ -5,34 +5,36 @@ import hashlib
 
 # ----- Page setup -----
 st.set_page_config(page_title="MMR Rent Compare", layout="wide")
-
 st.title("MMR Rent Compare – 1BHK Median (Hinglish)")
-st.caption("Zones → Areas sorted by 1BHK median rent (ascending). Data demo hai – real entries baad me update karenge.")
+st.caption("Global ranking (1–60) by 1BHK median rent. Same median = same rank (dense).")
 
 # ----- Cache-busting helpers -----
 def file_hash(path: str) -> str:
-    """Return md5 hash for a file to invalidate cache when CSV changes."""
     return hashlib.md5(Path(path).read_bytes()).hexdigest()
 
 @st.cache_data
 def load_data(path: str, version: str) -> pd.DataFrame:
-    # version param is only for cache key; not otherwise used
     return pd.read_csv(path)
 
 csv_path = "mmr_rent_data.csv"
-version = file_hash(csv_path)  # agar CSV badlegi to yeh hash change hoga → cache clear
-
+version = file_hash(csv_path)
 df = load_data(csv_path, version)
+
+# Safety: numeric dtypes
+for col in ["rent_median_1bhk", "rent_min_1bhk", "rent_max_1bhk"]:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+# ----- Global Rank (computed on full dataset, NOT after filter) -----
+df["global_rank"] = (
+    df["rent_median_1bhk"]
+    .rank(method="dense", ascending=True)
+    .astype("Int64")
+)
 
 # ----- Controls -----
 zones = df["zone"].dropna().unique().tolist()
 zones.sort()
 zone_selected = st.multiselect("Zone choose karo", zones, default=zones)
-
-# Safety: numeric conversion (in case CSV strings aa jaaye)
-for col in ["rent_median_1bhk", "rent_min_1bhk", "rent_max_1bhk"]:
-    if df[col].dtype != "int64" and df[col].dtype != "float64":
-        df[col] = pd.to_numeric(df[col], errors="coerce")
 
 min_rent = int(df["rent_median_1bhk"].min())
 max_rent = int(df["rent_median_1bhk"].max())
@@ -40,30 +42,29 @@ rent_range = st.slider("1BHK Median Rent range (₹/mo)", min_rent, max_rent, (m
 
 search = st.text_input("Area search (optional)", "")
 
-# Manual refresh button (useful when CSV update karo)
-col_a, col_b = st.columns([1, 3])
-with col_a:
+cols_top = st.columns([1, 3, 2])
+with cols_top[0]:
     if st.button("Reload latest data"):
         st.cache_data.clear()
         st.experimental_rerun()
+with cols_top[2]:
+    sort_zone_first = st.checkbox("Zone-wise grouping (optional)", value=False)
 
-# ----- Filter -----
+# ----- Filter (applied AFTER rank is computed) -----
 mask = df["zone"].isin(zone_selected) & df["rent_median_1bhk"].between(*rent_range)
 if search.strip():
     s = search.strip().lower()
     mask &= df["area"].str.lower().str.contains(s)
-
 filtered = df.loc[mask].copy()
 
-# ----- Sort -----
-sort_zone_first = st.checkbox("Zone-wise view (recommended)", value=True)
+# ----- Sort view -----
 if sort_zone_first:
     filtered = filtered.sort_values(by=["zone", "rent_median_1bhk", "area"], ascending=[True, True, True])
 else:
-    filtered = filtered.sort_values(by=["rent_median_1bhk", "area"], ascending=[True, True])
+    filtered = filtered.sort_values(by=["global_rank", "area"], ascending=[True, True])
 
 # ----- Display -----
-st.subheader("Areas (Ascending by 1BHK Median)")
+st.subheader("Areas (Global Rank by 1BHK Median)")
 
 def fmt_money(v):
     try:
@@ -71,8 +72,18 @@ def fmt_money(v):
     except Exception:
         return v
 
-show_cols = ["zone", "area", "region", "rent_median_1bhk", "rent_min_1bhk", "rent_max_1bhk", "deposit_ratio"]
+show_cols = [
+    "global_rank",
+    "zone",
+    "area",
+    "region",
+    "rent_median_1bhk",
+    "rent_min_1bhk",
+    "rent_max_1bhk",
+    "deposit_ratio",
+]
 rename = {
+    "global_rank": "Rank",
     "zone": "Zone",
     "area": "Area",
     "region": "Region",
@@ -81,18 +92,17 @@ rename = {
     "rent_max_1bhk": "High",
     "deposit_ratio": "Deposit",
 }
-
 view = filtered[show_cols].rename(columns=rename)
-view["Median 1BHK"] = view["Median 1BHK"].apply(fmt_money)
-view["Low"] = view["Low"].apply(fmt_money)
-view["High"] = view["High"].apply(fmt_money)
+for col in ["Median 1BHK", "Low", "High"]:
+    view[col] = view[col].apply(fmt_money)
 
 st.dataframe(view, use_container_width=True)
 
 st.markdown("---")
-st.markdown("**How to update data:** `mmr_rent_data.csv` ko Excel/Google Sheet se export karke yahan replace karo. Columns same rehne chahiye.")
-
+st.markdown(
+    "**Note:** Global rank poore dataset par based hai (filter ke baad nahi). "
+    "Same median rent waale areas ko same rank milta hai (dense ranking)."
+)
 with st.expander("CSV column spec (zaruri)"):
     st.code("zone,area,region,rent_median_1bhk,rent_min_1bhk,rent_max_1bhk,deposit_ratio", language="text")
-
 st.caption("© Open approach; private portals ki scraping nahi. User-submitted & open sources only.")

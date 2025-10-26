@@ -1,5 +1,8 @@
 import streamlit as st
 import pandas as pd
+from pathlib import Path
+import hashlib
+
 
 st.set_page_config(page_title="MMR Rent Compare", layout="wide")
 
@@ -7,11 +10,16 @@ st.title("MMR Rent Compare – 1BHK Median (Hinglish)")
 st.caption("Zones → Areas sorted by 1BHK median rent (ascending). Data demo hai – real entries baad me update karenge.")
 
 # Load data
-@st.cache_data
-def load_data():
-    return pd.read_csv("mmr_rent_data.csv")
+def file_hash(path):
+    return hashlib.md5(Path(path).read_bytes()).hexdigest()
 
-df = load_data()
+@st.cache_data
+def load_data(path, version):
+    return pd.read_csv(path)
+
+csv_path = "mmr_rent_data.csv"
+version = file_hash(csv_path)
+df = load_data(csv_path, version)
 
 # Controls
 zones = df["zone"].unique().tolist()
